@@ -112,7 +112,7 @@ app.post('/api/generate-otp', async (req, res) => {
     // console.log(`Generated OTP for ${phone}: ${otp}`);
     console.log(`Generated OTP for ${phone}: ${otp}`);
     console.log('Session ID after OTP generation:', req.sessionID);
-    console.log('User ID after OTP generation:', req.session.userId);
+    console.log('User IDs after OTP generation:', req.session.userId);
 
     res.json({ success: true, userId: user.userId });
   } catch (error) {
