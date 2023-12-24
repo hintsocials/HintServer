@@ -20,6 +20,7 @@ admin.initializeApp({
 const app = express();
 const port = process.env.PORT || 3001; // Set the port you want to use
 const storage = admin.storage().bucket(); 
+app.use(bodyParser.json());
 // Plivo configuration
 // const plivoClient = new plivo.Client('YOUR_PLIVO_API_KEY', 'YOUR_PLIVO_API_SECRET');
 // const plivoPhoneNumber = 'YOUR_PLIVO_PHONE_NUMBER';
@@ -31,23 +32,41 @@ app.use(cors({
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
   }));
-// Middleware to verify JWT and set userId in request
-const verifyToken = (req, res, next) => {
-  const token = req.headers.authorization;
+  const secretKey = '9999';
 
-  if (!token) {
-    return res.status(403).json({ success: false, error: 'Token not provided' });
+  function generateToken(userId) {
+    return jwt.sign({ userId }, secretKey, { expiresIn: '24h' });
   }
-
-  jwt.verify(token, '1111', (err, decoded) => {
-    if (err) {
-      return res.status(403).json({ success: false, error: 'Failed to authenticate token' });
+  
+  function verifyToken(token) {
+    try {
+      const decoded = jwt.verify(token, secretKey);
+      return decoded.userId;
+    } catch (error) {
+      return null;
     }
-
-    req.userId = decoded.userId;
+  }
+  
+  function authenticate(req, res, next) {
+    const token = req.headers.authorization;
+  
+    if (!token) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+  
+    const userId = verifyToken(token);
+  
+    if (!userId) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+  
+    req.userId = userId;
     next();
-  });
-};
+  }
+  
+  app.use(authenticate);
+  
+
 // app.use(cookieParser());
 
 //   // Use express-session middleware
@@ -132,9 +151,11 @@ app.post('/api/generate-otp', async (req, res) => {
     // console.log(`Generated OTP for ${phone}: ${otp}`);
     // console.log('Session ID after OTP generation:', req.sessionID);
     // console.log('User ID after OTP generation:', req.session.userId);
-    console.log('JWT:', req.headers.authorization);
+    // Generate JWT token and send it in the response
+    const token = generateToken(user.userId);
+    console.log('JWT:', token);
     console.log(`Generated OTP for ${phone}: ${otp}`);
-    console.log('User ID after OTP generation:', userId);
+    console.log('User ID after OTP generation:', req.userId);
 
 
 
@@ -151,7 +172,7 @@ app.post('/api/validate-otp', async (req, res) => {
     //const { userId, enteredOtp } = req.body;
     const { enteredOtp } = req.body;
     const userId = req.userId; // Use userId from JWT
-    console.log('JWT:', req.headers.authorization);
+    // console.log('JWT:', req.headers.authorization);
     console.log('User ID during OTP validation:', userId);
     console.log('Entered OTP:', enteredOtp);
 
