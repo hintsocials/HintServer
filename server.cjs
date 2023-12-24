@@ -17,8 +17,7 @@ admin.initializeApp({
 });
 
 const app = express();
-// const port = 3001; // Set the port you want to use
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 3001; // Set the port you want to use
 const storage = admin.storage().bucket(); 
 // Plivo configuration
 // const plivoClient = new plivo.Client('YOUR_PLIVO_API_KEY', 'YOUR_PLIVO_API_SECRET');
@@ -32,34 +31,26 @@ app.use(cors({
     credentials: true,
   }));
 
-
+app.use(cookieParser());
 
   // Use express-session middleware
-  // Use express-session middleware with Firebase Realtime Database session storage
-const FirebaseStore = require('connect-session-firebase')(session);
 app.use(session({
   secret: "1111", // Replace with a secret key for session encryption
-  resave: true,
+  resave: false,
   saveUninitialized: true,
-  store: new FirebaseStore({
-    database: admin.database(),
-    sessions: 'sessions', // Specify the node where sessions will be stored
-  }),
   cookie: {
-    secure: true, // Set to true in a production environment with HTTPS
+    secure: false, // Set to true in a production environment with HTTPS
     maxAge: 24 * 60 * 60 * 1000, // Session expires after 24 hours
-    sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax', // Adjust based on environment
   },
 }));
 app.use(express.json());
-app.use(cookieParser());
 
 // Middleware to log session information
-app.use((req, res, next) => {
-  console.log('Session ID:', req.session.id);
-  console.log('User ID:', req.session.userId);
-  next();
-});
+// app.use((req, res, next) => {
+//   console.log('Session ID:', req.sessionID);
+//   console.log('User ID:', req.session.userId);
+//   next();
+// });
 
 // Endpoint for generating OTP and storing user data
 app.post('/api/generate-otp', async (req, res) => {
@@ -88,7 +79,7 @@ app.post('/api/generate-otp', async (req, res) => {
     };
     await newUserRef.set(user);
 
-    // // Send OTP via SMS OTP
+    // Send OTP via SMS OTP
     // const smsResponse = await unirest.get("https://www.fast2sms.com/dev/bulkV2")
     //   .query({
     //     "authorization": apiKey,
@@ -118,11 +109,9 @@ app.post('/api/generate-otp', async (req, res) => {
     // }
 
     req.session.userId = user.userId;
-    req.session.save();
-    // res.json({ success: true, userId: user.userId });
     // console.log(`Generated OTP for ${phone}: ${otp}`);
     console.log(`Generated OTP for ${phone}: ${otp}`);
-    console.log('Session ID after OTP generation:', req.session.id);
+    console.log('Session ID after OTP generation:', req.sessionID);
     console.log('User ID after OTP generation:', req.session.userId);
 
     res.json({ success: true, userId: user.userId });
@@ -138,7 +127,8 @@ app.post('/api/validate-otp', async (req, res) => {
     //const { userId, enteredOtp } = req.body;
     const { enteredOtp } = req.body;
     const userId = req.session.userId;
-    console.log('Session ID during OTP validation:', req.session.id);
+
+    console.log('Session ID during OTP validation:', req.sessionID);
     console.log('User ID during OTP validation:', userId);
     console.log('Entered OTP:', enteredOtp);
 
@@ -180,7 +170,7 @@ app.post('/api/save-user-info', async (req, res) => {
     const existingUserData = userSnapshot.val();
     
 
-    console.log('Session ID during user-info:', req.session.id);
+    console.log('Session ID during user-info:', req.sessionID);
     // Assuming 'usersinfo' is the database node to store user information
     if (existingUserData) {
       // User exists, update the information
@@ -296,7 +286,7 @@ app.get('/api/fetch-user-details', async (req, res) => {
     const userSnapshot = await userRef.once('value');
     const user = userSnapshot.val();
 
-    console.log('Session ID during profiling:', req.session.id);
+    console.log('Session ID during profiling:', req.sessionID);
     console.log('User ID during OTP profiling:', userId);
 
     if (!user) {
