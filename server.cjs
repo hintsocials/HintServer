@@ -129,9 +129,14 @@ app.post('/api/generate-otp', async (req, res) => {
     const token = jwt.sign({ userId: user.userId }, '1111', {
       expiresIn: '24h', // Token expires after 24 hours
     });
+    // console.log(`Generated OTP for ${phone}: ${otp}`);
+    // console.log('Session ID after OTP generation:', req.sessionID);
+    // console.log('User ID after OTP generation:', req.session.userId);
+    console.log('Session ID:', req.sessionID);
+    console.log('JWT:', token);
     console.log(`Generated OTP for ${phone}: ${otp}`);
-    console.log('Session ID after OTP generation:', req.sessionID);
-    console.log('User ID after OTP generation:', req.session.userId);
+    console.log('User ID after OTP generation:', userId);
+
 
     res.json({ success: true, userId: user.userId });
   } catch (error) {
@@ -147,9 +152,14 @@ app.post('/api/validate-otp', async (req, res) => {
     const { enteredOtp } = req.body;
     const userId = req.userId; // Use userId from JWT
 
-    console.log('Session ID during OTP validation:', req.sessionID);
+    console.log('Session ID:', req.sessionID);
+    console.log('JWT:', req.headers.authorization);
     console.log('User ID during OTP validation:', userId);
     console.log('Entered OTP:', enteredOtp);
+
+    // console.log('Session ID during OTP validation:', req.sessionID);
+    // console.log('User ID during OTP validation:', userId);
+    // console.log('Entered OTP:', enteredOtp);
 
     // Retrieve user data from Firebase based on userId
     // const userSnapshot = await admin.database().ref(`usersnew/${userId}`).once('value');
@@ -182,14 +192,18 @@ app.post('/api/validate-otp', async (req, res) => {
 app.post('/api/save-user-info', async (req, res) => {
   try {
     const { name, dobsplit, gender, age } = req.body;
-    const userId = req.session.userId;
+    const userId = req.userId; // Use userId from JWT
     // Check if the user already exists in the database
     const userRef = admin.database().ref(`usersnew/${userId}`);
     const userSnapshot = await userRef.once('value');
     const existingUserData = userSnapshot.val();
+
+    console.log('Session ID:', req.sessionID);
+    console.log('JWT:', req.headers.authorization);
+    console.log('User ID during user-info:', userId);
     
 
-    console.log('Session ID during user-info:', req.sessionID);
+    // console.log('Session ID during user-info:', req.sessionID);
     // Assuming 'usersinfo' is the database node to store user information
     if (existingUserData) {
       // User exists, update the information
