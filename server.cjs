@@ -79,7 +79,7 @@ app.post('/api/generate-otp', async (req, res) => {
     //   phone,
     //   otp,
     // });
-
+    const userId = req.userId;
     // Send OTP via SMS using fast2sms.com API
     const apiKey = 'SayRwqio7DHnXj5zrtP9CUGpM2FvekV6hBfATJLdlQuI08xEs45CoxBJjcnmsi9FK4pzN6tk0ylhb2uQ';
 
@@ -126,16 +126,16 @@ app.post('/api/generate-otp', async (req, res) => {
     // }
 
     // req.session.userId = user.userId;
-    const token = jwt.sign({ userId: user.userId }, '1111', {
-      expiresIn: '24h', // Token expires after 24 hours
-    });
+    // const token = jwt.sign({ userId: user.userId }, '1111', {
+    //   expiresIn: '24h', // Token expires after 24 hours
+    // });
     // console.log(`Generated OTP for ${phone}: ${otp}`);
     // console.log('Session ID after OTP generation:', req.sessionID);
     // console.log('User ID after OTP generation:', req.session.userId);
-    console.log('Session ID:', req.sessionID);
-    console.log('JWT:', token);
+    console.log('JWT:', req.headers.authorization);
     console.log(`Generated OTP for ${phone}: ${otp}`);
-    console.log('User ID after OTP generation:', user.userId);
+    console.log('User ID after OTP generation:', userId);
+
 
 
     res.json({ success: true, userId: user.userId });
@@ -151,8 +151,6 @@ app.post('/api/validate-otp', async (req, res) => {
     //const { userId, enteredOtp } = req.body;
     const { enteredOtp } = req.body;
     const userId = req.userId; // Use userId from JWT
-
-    console.log('Session ID:', req.sessionID);
     console.log('JWT:', req.headers.authorization);
     console.log('User ID during OTP validation:', userId);
     console.log('Entered OTP:', enteredOtp);
@@ -198,10 +196,8 @@ app.post('/api/save-user-info', async (req, res) => {
     const userSnapshot = await userRef.once('value');
     const existingUserData = userSnapshot.val();
 
-    console.log('Session ID:', req.sessionID);
     console.log('JWT:', req.headers.authorization);
     console.log('User ID during user-info:', userId);
-    
 
     // console.log('Session ID during user-info:', req.sessionID);
     // Assuming 'usersinfo' is the database node to store user information
