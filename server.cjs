@@ -84,7 +84,7 @@ app.post('/api/generate-otp', async (req, res) => {
     const apiKey = 'SayRwqio7DHnXj5zrtP9CUGpM2FvekV6hBfATJLdlQuI08xEs45CoxBJjcnmsi9FK4pzN6tk0ylhb2uQ';
 
     // Generate a three-digit user ID
-    const userId = Math.floor(100 + Math.random() * 900);
+    // const userId = Math.floor(100 + Math.random() * 900);
 
     // Set user data under the 'usersnew' node using push
     const userRef = admin.database().ref('usersnew');
@@ -135,7 +135,7 @@ app.post('/api/generate-otp', async (req, res) => {
     console.log('Session ID:', req.sessionID);
     console.log('JWT:', token);
     console.log(`Generated OTP for ${phone}: ${otp}`);
-    console.log('User ID after OTP generation:', userId);
+    console.log('User ID after OTP generation:', user.userId);
 
 
     res.json({ success: true, userId: user.userId });
