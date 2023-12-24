@@ -6,7 +6,6 @@ const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const unirest = require("unirest");
-const jwt = require('jsonwebtoken');
 
 // Initialize Firebase Admin SDK
 const serviceAccount = require('./ranking-intern-firebase-adminsdk-ojxmo-32e9590c3d.json');
@@ -18,9 +17,8 @@ admin.initializeApp({
 });
 
 const app = express();
-const port = process.env.PORT || 3001; // Set the port you want to use
+const port = 3001; // Set the port you want to use
 const storage = admin.storage().bucket(); 
-app.use(bodyParser.json());
 // Plivo configuration
 // const plivoClient = new plivo.Client('YOUR_PLIVO_API_KEY', 'YOUR_PLIVO_API_SECRET');
 // const plivoPhoneNumber = 'YOUR_PLIVO_PHONE_NUMBER';
@@ -32,54 +30,20 @@ app.use(cors({
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
   }));
-  const secretKey = '9999';
 
-  function generateToken(userId) {
-    return jwt.sign({ userId }, secretKey, { expiresIn: '24h' });
-  }
-  
-  function verifyToken(token) {
-    try {
-      const decoded = jwt.verify(token, secretKey);
-      return decoded.userId;
-    } catch (error) {
-      return null;
-    }
-  }
-  
-  function authenticate(req, res, next) {
-    const token = req.headers.authorization;
-  
-    if (!token) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-  
-    const userId = verifyToken(token);
-  
-    if (!userId) {
-      return res.status(401).json({ error: 'Invalid token' });
-    }
-  
-    req.userId = userId;
-    next();
-  }
-  
-  app.use(authenticate);
-  
+app.use(cookieParser());
 
-// app.use(cookieParser());
-
-//   // Use express-session middleware
-// app.use(session({
-//   secret: "1111", // Replace with a secret key for session encryption
-//   resave: false,
-//   saveUninitialized: true,
-//   cookie: {
-//     secure: true, // Set to true in a production environment with HTTPS
-//     maxAge: 24 * 60 * 60 * 1000, // Session expires after 24 hours
-//   },
-// }));
-// app.use(express.json());
+  // Use express-session middleware
+app.use(session({
+  secret: "1111", // Replace with a secret key for session encryption
+  resave: false,
+  saveUninitialized: true,
+  cookie: {
+    secure: false, // Set to true in a production environment with HTTPS
+    maxAge: 24 * 60 * 60 * 1000, // Session expires after 24 hours
+  },
+}));
+app.use(express.json());
 
 // Middleware to log session information
 // app.use((req, res, next) => {
@@ -98,7 +62,7 @@ app.post('/api/generate-otp', async (req, res) => {
     //   phone,
     //   otp,
     // });
-    const userId = req.userId;
+
     // Send OTP via SMS using fast2sms.com API
     const apiKey = 'SayRwqio7DHnXj5zrtP9CUGpM2FvekV6hBfATJLdlQuI08xEs45CoxBJjcnmsi9FK4pzN6tk0ylhb2uQ';
 
@@ -144,20 +108,11 @@ app.post('/api/generate-otp', async (req, res) => {
     //   return;
     // }
 
-    // req.session.userId = user.userId;
-    // const token = jwt.sign({ userId: user.userId }, '1111', {
-    //   expiresIn: '24h', // Token expires after 24 hours
-    // });
+    req.session.userId = user.userId;
     // console.log(`Generated OTP for ${phone}: ${otp}`);
-    // console.log('Session ID after OTP generation:', req.sessionID);
-    // console.log('User ID after OTP generation:', req.session.userId);
-    // Generate JWT token and send it in the response
-    const token = generateToken(user.userId);
-    console.log('JWT:', token);
     console.log(`Generated OTP for ${phone}: ${otp}`);
-    console.log('User ID after OTP generation:', req.userId);
-
-
+    console.log('Session ID after OTP generation:', req.sessionID);
+    console.log('User ID after OTP generation:', req.session.userId);
 
     res.json({ success: true, userId: user.userId });
   } catch (error) {
@@ -171,14 +126,11 @@ app.post('/api/validate-otp', async (req, res) => {
   try {
     //const { userId, enteredOtp } = req.body;
     const { enteredOtp } = req.body;
-    const userId = req.userId; // Use userId from JWT
-    // console.log('JWT:', req.headers.authorization);
+    const userId = req.session.userId;
+
+    console.log('Session ID during OTP validation:', req.sessionID);
     console.log('User ID during OTP validation:', userId);
     console.log('Entered OTP:', enteredOtp);
-
-    // console.log('Session ID during OTP validation:', req.sessionID);
-    // console.log('User ID during OTP validation:', userId);
-    // console.log('Entered OTP:', enteredOtp);
 
     // Retrieve user data from Firebase based on userId
     // const userSnapshot = await admin.database().ref(`usersnew/${userId}`).once('value');
@@ -211,16 +163,14 @@ app.post('/api/validate-otp', async (req, res) => {
 app.post('/api/save-user-info', async (req, res) => {
   try {
     const { name, dobsplit, gender, age } = req.body;
-    const userId = req.userId; // Use userId from JWT
+    const userId = req.session.userId;
     // Check if the user already exists in the database
     const userRef = admin.database().ref(`usersnew/${userId}`);
     const userSnapshot = await userRef.once('value');
     const existingUserData = userSnapshot.val();
+    
 
-    console.log('JWT:', req.headers.authorization);
-    console.log('User ID during user-info:', userId);
-
-    // console.log('Session ID during user-info:', req.sessionID);
+    console.log('Session ID during user-info:', req.sessionID);
     // Assuming 'usersinfo' is the database node to store user information
     if (existingUserData) {
       // User exists, update the information
