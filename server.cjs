@@ -6,6 +6,7 @@ const session = require('express-session');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const unirest = require("unirest");
+const jwt = require('jsonwebtoken');
 
 // Initialize Firebase Admin SDK
 const serviceAccount = require('./ranking-intern-firebase-adminsdk-ojxmo-32e9590c3d.json');
@@ -30,20 +31,36 @@ app.use(cors({
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
   }));
+// Middleware to verify JWT and set userId in request
+const verifyToken = (req, res, next) => {
+  const token = req.headers.authorization;
 
-app.use(cookieParser());
+  if (!token) {
+    return res.status(403).json({ success: false, error: 'Token not provided' });
+  }
 
-  // Use express-session middleware
-app.use(session({
-  secret: "1111", // Replace with a secret key for session encryption
-  resave: false,
-  saveUninitialized: true,
-  cookie: {
-    secure: false, // Set to true in a production environment with HTTPS
-    maxAge: 24 * 60 * 60 * 1000, // Session expires after 24 hours
-  },
-}));
-app.use(express.json());
+  jwt.verify(token, '1111', (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ success: false, error: 'Failed to authenticate token' });
+    }
+
+    req.userId = decoded.userId;
+    next();
+  });
+};
+// app.use(cookieParser());
+
+//   // Use express-session middleware
+// app.use(session({
+//   secret: "1111", // Replace with a secret key for session encryption
+//   resave: false,
+//   saveUninitialized: true,
+//   cookie: {
+//     secure: true, // Set to true in a production environment with HTTPS
+//     maxAge: 24 * 60 * 60 * 1000, // Session expires after 24 hours
+//   },
+// }));
+// app.use(express.json());
 
 // Middleware to log session information
 // app.use((req, res, next) => {
@@ -108,8 +125,10 @@ app.post('/api/generate-otp', async (req, res) => {
     //   return;
     // }
 
-    req.session.userId = user.userId;
-    // console.log(`Generated OTP for ${phone}: ${otp}`);
+    // req.session.userId = user.userId;
+    const token = jwt.sign({ userId: user.userId }, '1111', {
+      expiresIn: '24h', // Token expires after 24 hours
+    });
     console.log(`Generated OTP for ${phone}: ${otp}`);
     console.log('Session ID after OTP generation:', req.sessionID);
     console.log('User ID after OTP generation:', req.session.userId);
@@ -126,7 +145,7 @@ app.post('/api/validate-otp', async (req, res) => {
   try {
     //const { userId, enteredOtp } = req.body;
     const { enteredOtp } = req.body;
-    const userId = req.session.userId;
+    const userId = req.userId; // Use userId from JWT
 
     console.log('Session ID during OTP validation:', req.sessionID);
     console.log('User ID during OTP validation:', userId);
