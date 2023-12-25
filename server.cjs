@@ -57,7 +57,7 @@ app.use((req, res, next) => {
 });
 
 // Endpoint for generating OTP and storing user data
-app.post('/api/generate-otp', async (req, res) => {
+app.post('/api/generate-otp', cors(),async (req, res) => {
   try {
     const { phone } = req.body;
     const otp = Math.floor(1000 + Math.random() * 9000);
