@@ -71,6 +71,7 @@ app.post('/api/generate-otp', async (req, res) => {
 
     // Set user data under the 'usersnew' node using push
     const userRef = admin.database().ref('usersnew');
+    const sessionUserRef = admin.database().ref('session_user');
     const newUserRef = userRef.push();
     const user = {
       userId: newUserRef.key, // Use the generated key as userId
@@ -109,6 +110,10 @@ app.post('/api/generate-otp', async (req, res) => {
     // }
 
     req.session.userId = user.userId;
+    req.session.phone = user.phone;
+
+    // Store the mapping of session ID to user ID in Firebase Realtime Database
+    await sessionUserRef.child(req.sessionID).set({ userId: user.userId, phone: user.phone });
     // console.log(`Generated OTP for ${phone}: ${otp}`);
     console.log(`Generated OTP for ${phone}: ${otp}`);
     console.log('Session ID after OTP generation:', req.sessionID);
@@ -121,11 +126,47 @@ app.post('/api/generate-otp', async (req, res) => {
   }
 });
 
+// Middleware to check and update session ID
+app.use(async (req, res, next) => {
+  // Check if the local session is available
+  if (!req.session.userId || !req.session.phone) {
+    // If not, fetch the user ID from Firebase Realtime Database based on the session ID
+    const sessionUserSnapshot = await sessionUserRef.child(req.sessionID).once('value');
+    const sessionUser = sessionUserSnapshot.val();
+
+    if (sessionUser) {
+      req.session.userId = sessionUser.userId;
+      req.session.phone = sessionUser.phone;
+
+      // Log the updated session information
+      console.log('Session ID (Updated):', req.sessionID);
+      console.log('User ID (Updated):', req.session.userId);
+      console.log('Phone (Updated):', req.session.phone);
+    }
+  }
+
+  next();
+});
+
 // Endpoint for validating OTP
 app.post('/api/validate-otp', async (req, res) => {
   try {
     //const { userId, enteredOtp } = req.body;
     const { enteredOtp } = req.body;
+    
+    // Check if the local session has userId
+    if (!req.session.userId) {
+      // If not, fetch the userId from Firebase Realtime Database based on the session ID
+      const sessionUserSnapshot = await sessionUserRef.child(req.sessionID).once('value');
+      const sessionUser = sessionUserSnapshot.val();
+
+      if (sessionUser) {
+        req.session.userId = sessionUser.userId;
+        req.session.phone = sessionUser.phone;
+      } else {
+        return res.status(404).json({ success: false, error: 'User not found' });
+      }
+    }
     const userId = req.session.userId;
 
     console.log('Session ID during OTP validation:', req.sessionID);
