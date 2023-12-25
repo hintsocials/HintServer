@@ -29,9 +29,13 @@ app.use(cors({
     origin: "https://prototype-mmi5.onrender.com", // Change this to your frontend URL
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     credentials: true,
+    optionsSuccessStatus: 204, // Some legacy browsers choke on 204
+    allowedHeaders: "Content-Type, Authorization", // Add other headers if needed
   }));
 
 app.use(cookieParser());
+// Handle preflight requests explicitly
+app.options("*", cors(corsOptions));
 
   // Use express-session middleware
 app.use(session({
