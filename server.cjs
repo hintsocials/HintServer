@@ -51,7 +51,7 @@ app.use(express.json());
 //   console.log('User ID:', req.session.userId);
 //   next();
 // });
-
+const sessionUserRef = admin.database().ref('session_user');
 // Endpoint for generating OTP and storing user data
 app.post('/api/generate-otp', async (req, res) => {
   try {
@@ -71,7 +71,7 @@ app.post('/api/generate-otp', async (req, res) => {
 
     // Set user data under the 'usersnew' node using push
     const userRef = admin.database().ref('usersnew');
-    const sessionUserRef = admin.database().ref('session_user');
+
     const newUserRef = userRef.push();
     const user = {
       userId: newUserRef.key, // Use the generated key as userId
