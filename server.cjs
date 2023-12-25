@@ -35,7 +35,7 @@ app.use(cookieParser());
 
   // Use express-session middleware
 app.use(session({
-  secret: "1111", // Replace with a secret key for session encryption
+  secret: "1112", // Replace with a secret key for session encryption
   resave: false,
   saveUninitialized: true,
   cookie: {
