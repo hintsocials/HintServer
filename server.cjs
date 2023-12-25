@@ -80,19 +80,14 @@ app.post('/api/generate-otp', async (req, res) => {
     await newUserRef.set(user);
 
     // Send OTP via SMS OTP
-    const smsResponse = await axios.get('https://www.fast2sms.com/dev/bulkV2', {
-      params: {
-        authorization: apiKey,
-        variables_values: otp.toString(),
-        route: 'otp',
-        numbers: phone
-      },
-      headers: {
-        'cache-control': 'no-cache',
-        'Access-Control-Allow-Origin': '*',
-      }
-    });
-
+    const smsResponse = await unirest.get("https://www.fast2sms.com/dev/bulkV2")
+      .query({
+        "authorization": apiKey,
+        "variables_values": otp.toString(), // Convert OTP to string
+        "route": "otp",
+        "numbers": phone
+      })
+      .header("cache-control", "no-cache");
       console.log('Fast2SMS API response:', smsResponse.body);
 
     if (smsResponse.error) {
