@@ -34,8 +34,8 @@ app.use(cors({
   }));
 
 app.use(cookieParser());
-// Handle preflight requests explicitly
-app.options("*", cors(corsOptions));
+// // Handle preflight requests explicitly
+// app.options("*", cors(corsOptions));
 
   // Use express-session middleware
 app.use(session({
