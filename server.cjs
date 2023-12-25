@@ -163,9 +163,15 @@ app.post('/api/validate-otp', async (req, res) => {
       if (sessionUser) {
         req.session.userId = sessionUser.userId;
         req.session.phone = sessionUser.phone;
+
+        // Log that userId is fetched from the database
+        console.log('Fetched userId from the database based on session ID:', req.session.userId);
       } else {
         return res.status(404).json({ success: false, error: 'User not found' });
       }
+    } else {
+      // Log that userId is found locally
+      console.log('Found userId locally:', req.session.userId);
     }
     const userId = req.session.userId;
 
