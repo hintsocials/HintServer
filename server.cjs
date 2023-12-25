@@ -108,13 +108,13 @@ app.post('/api/generate-otp', async (req, res) => {
     //   return;
     // }
 
-    req.session.userId = user.userId;
-    // console.log(`Generated OTP for ${phone}: ${otp}`);
+    // req.session.userId = user.userId;
+    // // console.log(`Generated OTP for ${phone}: ${otp}`);
     console.log(`Generated OTP for ${phone}: ${otp}`);
-    console.log('Session ID after OTP generation:', req.sessionID);
-    console.log('User IDs after OTP generation:', req.session.userId);
+    // console.log('Session ID after OTP generation:', req.sessionID);
+    console.log('User IDs after OTP generation:', user.userId);
 
-    res.json({ success: true, userId: user.userId });
+    res.json({ success: true, userId : user.userId , phone });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, error: 'Internal Server Error' });
@@ -125,10 +125,10 @@ app.post('/api/generate-otp', async (req, res) => {
 app.post('/api/validate-otp', async (req, res) => {
   try {
     //const { userId, enteredOtp } = req.body;
-    const { enteredOtp } = req.body;
-    const userId = req.session.userId;
+    const { enteredOtp, userId } = req.body;
 
-    console.log('Session ID during OTP validation:', req.sessionID);
+
+    // console.log('Session ID during OTP validation:', req.sessionID);
     console.log('User ID during OTP validation:', userId);
     console.log('Entered OTP:', enteredOtp);
 
@@ -149,7 +149,7 @@ app.post('/api/validate-otp', async (req, res) => {
     // Validate OTP
     if (enteredOtp == user.otp) {
       await userRef.update({ otp: null });
-      return res.json({ success: true, message: 'OTP is valid' });
+      return res.json({ success: true, message: 'OTP is valid',userId : userId });
     } else {
       return res.json({ success: false, error: 'Invalid OTP' });
     }
@@ -162,8 +162,8 @@ app.post('/api/validate-otp', async (req, res) => {
 // Endpoint for saving user information
 app.post('/api/save-user-info', async (req, res) => {
   try {
-    const { name, dobsplit, gender, age } = req.body;
-    const userId = req.session.userId;
+    const { name, dobsplit, gender, age,userId } = req.body;
+    
     // Check if the user already exists in the database
     const userRef = admin.database().ref(`usersnew/${userId}`);
     const userSnapshot = await userRef.once('value');
@@ -193,7 +193,7 @@ app.post('/api/save-user-info', async (req, res) => {
     console.log('User information saved for userId:', userId);
     // console.log('User information:', userRef);
 
-    res.json({ success: true, message: 'User information saved successfully' });
+    res.json({ success: true, message: 'User information saved successfully',userId : userId });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, error: 'Internal Server Error' });
@@ -203,9 +203,8 @@ app.post('/api/save-user-info', async (req, res) => {
 // Endpoint for saving user information after on boarding
 app.post('/api/save-user-infonew', async (req, res) => {
   try {
-    const { name, dobsplit, gender, age, profileImageOne, profileImageTwo, qualification, bio, interests, statuses, preferedAge, preferedGender } = req.body;
-    const userId = req.session.userId;
-    // Check if the user already exists in the database
+    const { name,userId, dobsplit, gender, age, profileImageOne, profileImageTwo, qualification, bio, interests, statuses, preferedAge, preferedGender } = req.body;
+   // Check if the user already exists in the database
     const userRef = admin.database().ref(`usersnew/${userId}`);
     const userSnapshot = await userRef.once('value');
     const existingUserData = userSnapshot.val();
@@ -254,7 +253,7 @@ app.post('/api/save-user-infonew', async (req, res) => {
   }
 
   console.log('User information saved for userId:', userId);
-  res.json({ success: true, message: 'User information saved successfully' });
+  res.json({ success: true, message: 'User information saved successfully',userId : userId });
 } catch (error) {
   console.error(error);
   res.status(500).json({ success: false, error: 'Internal Server Error' });
@@ -281,7 +280,8 @@ async function saveImageAndGetURL(userId, folderName, imageName, imageData) {
 //this is for fetchhing the profile
 app.get('/api/fetch-user-details', async (req, res) => {
   try {
-    const userId = req.session.userId; // Retrieve user ID from the session
+    const { userId } = req.body;
+
     const userRef = admin.database().ref(`usersnew/${userId}`);
     const userSnapshot = await userRef.once('value');
     const user = userSnapshot.val();
@@ -294,7 +294,7 @@ app.get('/api/fetch-user-details', async (req, res) => {
     }
 
     // Return the user details to the client
-    return res.json({ success: true, user });
+    return res.json({ success: true, user,userId : userId });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, error: 'Internal Server Error' });
@@ -304,7 +304,8 @@ app.get('/api/fetch-user-details', async (req, res) => {
 // this is for rendering the hint-landing page whhich shows all users except the current user in the venue
 app.get('/api/users', async (req, res) => {
   try {
-    const currentUserId = req.session.userId; // Retrieve the current user's ID from the session
+    const { userId } = req.query;
+    const currentUserId = userId; // Retrieve the current user's ID from the session
 
     // Retrieve all users from the 'usersnew' node
     const usersSnapshot = await admin.database().ref('usersnew').once('value');
@@ -316,7 +317,7 @@ app.get('/api/users', async (req, res) => {
     // Filter out the current user
     const filteredUsers = Object.values(usersObject).filter(user => user.userId !== currentUserId);
 
-    res.json({ success: true, users: filteredUsers });
+    res.json({ success: true, users: filteredUsers,userId : userId });
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, error: 'Internal Server Error' });
