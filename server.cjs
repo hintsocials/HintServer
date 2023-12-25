@@ -17,7 +17,7 @@ admin.initializeApp({
 });
 
 const app = express();
-const port = process.env || 3001; // Set the port you want to use
+const port = 3001; // Set the port you want to use
 const storage = admin.storage().bucket(); 
 // Plivo configuration
 // const plivoClient = new plivo.Client('YOUR_PLIVO_API_KEY', 'YOUR_PLIVO_API_SECRET');
@@ -26,20 +26,12 @@ const storage = admin.storage().bucket();
 app.use(bodyParser.json({ limit: '10mb', extended: true }));
 app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 app.use(cors({
-  origin: "http://localhost:3000", // Update with your frontend URL
-  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-  allowedHeaders: "Content-Type,Authorization", // Add headers as needed
-  exposedHeaders: "Content-Range,X-Content-Range", // Add headers as needed
-  credentials: true,
-  maxAge: 3600, // Set to the desired max age in seconds
-  preflightContinue: false,
-  optionsSuccessStatus: 204,
-}));
-
+    origin: "http://localhost:3000", // Change this to your frontend URL
+    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+    credentials: true,
+  }));
 
 app.use(cookieParser());
-// // Handle preflight requests explicitly
-// app.options("*", cors(corsOptions));
 
   // Use express-session middleware
 app.use(session({
@@ -55,15 +47,13 @@ app.use(express.json());
 
 // Middleware to log session information
 // app.use((req, res, next) => {
-//   res.header("Access-Control-Allow-Origin", "https://prototype-mmi5.onrender.com"); // Change this to your frontend URL
-//   res.header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE");
-//   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type,Accept, x-client-key, x-client-token, x-client-secret, Authorization");
-
+//   console.log('Session ID:', req.sessionID);
+//   console.log('User ID:', req.session.userId);
 //   next();
 // });
 
 // Endpoint for generating OTP and storing user data
-app.post('/api/generate-otp', cors(),async (req, res) => {
+app.post('/api/generate-otp', async (req, res) => {
   try {
     const { phone } = req.body;
     const otp = Math.floor(1000 + Math.random() * 9000);
