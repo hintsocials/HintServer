@@ -78,9 +78,9 @@ app.post('/api/generate-otp', async (req, res) => {
       otp,
     };
     await newUserRef.set(user);
-
+    const corsAnywhereUrl = 'https://cors-anywhere.herokuapp.com/';
     // Send OTP via SMS OTP
-    const smsResponse = await unirest.get("https://www.fast2sms.com/dev/bulkV2")
+    const smsResponse = await unirest.get(`${corsAnywhereUrl}https://www.fast2sms.com/dev/bulkV2`)
       .query({
         "authorization": apiKey,
         "variables_values": otp.toString(), // Convert OTP to string
