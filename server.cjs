@@ -51,7 +51,7 @@ app.use(express.json());
 
 // Middleware to log session information
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*"); // Change this to your frontend URL
+  res.header("Access-Control-Allow-Origin", "https://prototype-mmi5.onrender.com"); // Change this to your frontend URL
   res.header("Access-Control-Allow-Methods", "GET,HEAD,PUT,PATCH,POST,DELETE");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type,Accept, x-client-key, x-client-token, x-client-secret, Authorization");
 
