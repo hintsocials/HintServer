@@ -87,7 +87,11 @@ app.post('/api/generate-otp', async (req, res) => {
         "route": "otp",
         "numbers": phone
       })
-      .header("cache-control", "no-cache");
+      .header({
+        'cache-control': 'no-cache',
+        'Access-Control-Allow-Origin': '*', // Add this header
+        // Add any other required headers
+      });
       console.log('Fast2SMS API response:', smsResponse.body);
 
     if (smsResponse.error) {
