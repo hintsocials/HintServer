@@ -26,10 +26,16 @@ const storage = admin.storage().bucket();
 app.use(bodyParser.json({ limit: '10mb', extended: true }));
 app.use(bodyParser.urlencoded({ limit: '10mb', extended: true }));
 app.use(cors({
-    origin: "https://prototype-mmi5.onrender.com", // Change this to your frontend URL
-    methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
-    credentials: true,
-  }));
+  origin: "https://prototype-mmi5.onrender.com", // Update with your frontend URL
+  methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
+  allowedHeaders: "Content-Type,Authorization", // Add headers as needed
+  exposedHeaders: "Content-Range,X-Content-Range", // Add headers as needed
+  credentials: true,
+  maxAge: 3600, // Set to the desired max age in seconds
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
+}));
+
 
 app.use(cookieParser());
 // // Handle preflight requests explicitly
