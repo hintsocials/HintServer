@@ -162,7 +162,7 @@ app.post('/api/validate-otp', async (req, res) => {
 // Endpoint for saving user information
 app.post('/api/save-user-info', async (req, res) => {
   try {
-    const { name, dobsplit, gender, age,userId } = req.body;
+    const { name, dobsplit, gender, age, userId } = req.body;
     
     // Check if the user already exists in the database
     const userRef = admin.database().ref(`usersnew/${userId}`);
